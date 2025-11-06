@@ -2,13 +2,15 @@ import type { NivelAcademico } from './nivel_academico'
 
 export interface Programa {
   id: number
-  idNivelAcademico: number
   nombre: string
   descripcion: string
   version: number
-  duracionMeses: number
+  duracion_meses: number
   costo: number
-  fechaInicio: Date
-  estado: string
+  fecha_inicio: string
+  estado: 'En Planificación' | 'En curso' | 'Finalizado'
   nivelAcademico: NivelAcademico
+  fecha_creacion?: string
+  fecha_modificacion?: string
+  fecha_eliminacion?: string
 }

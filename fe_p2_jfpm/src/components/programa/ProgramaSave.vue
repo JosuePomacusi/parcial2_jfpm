@@ -2,12 +2,10 @@
 import type { Programa } from '@/models/programa'
 import type { NivelAcademico } from '@/models/nivel_academico'
 import http from '@/plugins/axios'
-import { Button, Dialog, InputText, Textarea, Dropdown } from 'primevue'
-import { computed, ref, watch, onMounted } from 'vue'
+import { Button, Dialog, InputNumber, InputText, Select, Textarea, Calendar } from 'primevue'
+import { computed, ref, watch } from 'vue'
 
 const ENDPOINT = 'programas'
-
-
 const props = defineProps({
   mostrar: Boolean,
   programa: {
@@ -16,8 +14,9 @@ const props = defineProps({
   },
   modoEdicion: Boolean,
 })
-
 const emit = defineEmits(['guardar', 'close'])
+
+const niveles = ref<NivelAcademico[]>([])
 
 const dialogVisible = computed({
   get: () => props.mostrar,
@@ -30,26 +29,24 @@ const programa = ref<Programa>({ ...props.programa })
 
 watch(
   () => props.programa,
-  (newVal) => {
-    programa.value = { ...newVal }
-  }
+  (nuevoValor) => {
+    programa.value = { ...nuevoValor }
+  },
 )
 
-const listaNiveles = ref<NivelAcademico[]>([])
-
-async function cargarNiveles() {
-  const res = await http.get('niveles_academicos')
-  listaNiveles.value = res.data
+async function obtenerNiveles() {
+  try {
+    const response = await http.get('niveles_academicos')
+    niveles.value = response.data
+  } catch (error) {
+    console.error('Error cargando niveles académicos', error)
+  }
 }
-
-onMounted(() => {
-  cargarNiveles()
-})
 
 async function handleSave() {
   try {
     const body = {
-      idNivelAcademico: programa.value.idNivelAcademico,
+      idNivelAcademico: programa.value.nivelAcademico?.id,
       nombre: programa.value.nombre,
       descripcion: programa.value.descripcion,
       version: programa.value.version,
@@ -59,68 +56,102 @@ async function handleSave() {
       estado: programa.value.estado,
     }
 
-    if (props.modoEdicion) {
+    if (props.modoEdicion && programa.value.id) {
       await http.patch(`${ENDPOINT}/${programa.value.id}`, body)
     } else {
       await http.post(ENDPOINT, body)
     }
 
     emit('guardar')
-    programa.value = {} as Programa
     dialogVisible.value = false
   } catch (error: any) {
-    alert(error?.response?.data?.message)
+    alert(error?.response?.data?.message || 'Error al guardar el programa')
   }
 }
+
+watch(
+  () => props.mostrar,
+  (nuevoValor) => {
+    if (nuevoValor) {
+      obtenerNiveles()
+      if (props.programa?.id) {
+        programa.value = { ...props.programa }
+      } else {
+        programa.value = {
+          nombre: '',
+          descripcion: '',
+          version: 1,
+          duracionMeses: 0,
+          costo: 0,
+          fechaInicio: new Date(),
+          estado: 'En Planificación',
+          nivelAcademico: { id: 0, nombre: '' },
+        } as Programa
+      }
+    }
+  },
+)
 </script>
 
 <template>
   <div class="card flex justify-center">
     <Dialog v-model:visible="dialogVisible" :header="props.modoEdicion ? 'Editar Programa' : 'Crear Programa'"
-      style="width: 35rem">
+      style="width: 35rem" modal>
+      <!-- Nivel académico -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Nivel</label>
-        <Dropdown v-model="programa.idNivelAcademico" :options="listaNiveles" optionLabel="nombre" optionValue="id"
-          placeholder="Seleccione" class="flex-auto" />
+        <label for="nivel" class="font-semibold w-4">Nivel académico</label>
+        <Select id="nivel" v-model="programa.nivelAcademico.id" :options="niveles" optionLabel="nombre" optionValue="id"
+          class="flex-auto" placeholder="Seleccione un nivel" />
       </div>
 
+      <!-- Nombre -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Nombre</label>
-        <InputText v-model="programa.nombre" class="flex-auto" />
+        <label for="nombre" class="font-semibold w-4">Nombre</label>
+        <InputText id="nombre" v-model="programa.nombre" class="flex-auto" autocomplete="off" maxlength="100"
+          placeholder="Ej. Maestría en Desarrollo Web" />
       </div>
 
+      <!-- Descripción -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Descripción</label>
-        <Textarea v-model="programa.descripcion" rows="4" class="flex-auto" />
+        <label for="descripcion" class="font-semibold w-4">Descripción</label>
+        <Textarea id="descripcion" v-model="programa.descripcion" class="flex-auto" rows="3" maxlength="2000"
+          placeholder="Breve descripción del programa" />
       </div>
 
+      <!-- Versión -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Versión</label>
-        <InputText type="number" v-model="programa.version" class="flex-auto" />
+        <label for="version" class="font-semibold w-4">Versión</label>
+        <InputNumber id="version" v-model="programa.version" class="flex-auto" />
       </div>
 
+      <!-- Duración -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Duración</label>
-        <InputText type="number" v-model="programa.duracionMeses" class="flex-auto" />
+        <label for="duracion" class="font-semibold w-4">Duración (meses)</label>
+        <InputNumber id="duracion" v-model="programa.duracionMeses" class="flex-auto" />
       </div>
 
+      <!-- Costo -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Costo</label>
-        <InputText type="number" v-model="programa.costo" class="flex-auto" />
+        <label for="costo" class="font-semibold w-4">Costo (Bs.)</label>
+        <InputNumber id="costo" v-model="programa.costo" mode="currency" currency="BOB" locale="es-BO"
+          class="flex-auto" />
       </div>
 
+      <!-- Fecha inicio -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Fecha Inicio</label>
-        <InputText type="date" v-model="programa.fechaInicio" class="flex-auto" />
+        <label for="fecha" class="font-semibold w-4">Fecha de inicio</label>
+        <Calendar id="fecha" v-model="programa.fechaInicio" class="flex-auto" dateFormat="dd/mm/yy" showIcon />
       </div>
 
+      <!-- Estado -->
       <div class="flex items-center gap-4 mb-4">
-        <label class="font-semibold w-4">Estado</label>
-        <Dropdown v-model="programa.estado" :options="['En Planificación', 'En curso', 'Finalizado']"
-          placeholder="Seleccione" class="flex-auto" />
+        <label for="estado" class="font-semibold w-4">Estado</label>
+        <Select id="estado" v-model="programa.estado" :options="['En Planificación', 'En curso', 'Finalizado']"
+          class="flex-auto" placeholder="Seleccione estado" />
       </div>
 
-      <div class="flex justify-end gap-2">
+      <!-- Botones -->
+      <div class="flex justify-end gap-2 mt-4">
         <Button type="button" label="Cancelar" icon="pi pi-times" severity="secondary" @click="dialogVisible = false" />
         <Button type="button" label="Guardar" icon="pi pi-save" @click="handleSave" />
       </div>
