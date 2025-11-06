@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import NivelesList from '@/components/nivel_academico/NivelAcademicoList.vue'
-import NivelSave from '@/components/nivel_academico/NivelAcademicoSave.vue'
+import NivelAcademicoList from '@/components/nivel_academico/NivelAcademicoList.vue'
+import NivelAcademicoSave from '@/components/nivel_academico/NivelAcademicoSave.vue'
 import { Button } from 'primevue'
 import { ref } from 'vue'
 
 const mostrarDialog = ref(false)
-const nivelesListRef = ref<typeof NivelesList | null>(null)
+const nivelListRef = ref<typeof NivelAcademicoList | null>(null)
 const nivelEdit = ref<any>(null)
 
 function handleCreate() {
@@ -23,23 +23,16 @@ function handleCloseDialog() {
 }
 
 function handleGuardar() {
-  nivelesListRef.value?.obtenerLista()
+  nivelListRef.value?.obtenerLista()
 }
 </script>
 
 <template>
   <div class="m-7">
     <h2>Niveles Académicos</h2>
-    <Button label="Crear Nuevo" icon="pi pi-plus" @click="handleCreate" />
-    <NivelesList ref="nivelesListRef" @edit="handleEdit" />
-    <NivelSave
-      :mostrar="mostrarDialog"
-      :nivel="nivelEdit"
-      :modoEdicion="!!nivelEdit"
-      @guardar="handleGuardar"
-      @close="handleCloseDialog"
-    />
+    <Button label="Crear Nuevo" icon="pi pi-plus" @click="handleCreate" class="mb-3" />
+    <NivelAcademicoList ref="nivelListRef" @edit="handleEdit" />
+    <NivelAcademicoSave :mostrar="mostrarDialog" :nivel="nivelEdit" :modoEdicion="!!nivelEdit" @guardar="handleGuardar"
+      @close="handleCloseDialog" />
   </div>
 </template>
-
-<style scoped></style>

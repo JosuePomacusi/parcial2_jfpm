@@ -1,85 +1,80 @@
 <script setup lang="ts">
 import type { NivelAcademico } from '@/models/nivel_academico'
 import http from '@/plugins/axios'
-import { Button } from 'primevue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { Button, Column, DataTable, Dialog, InputGroup, InputGroupAddon, InputText } from 'primevue'
 
 const ENDPOINT = 'niveles_academicos'
 
 const niveles = ref<NivelAcademico[]>([])
+const nivelDelete = ref<NivelAcademico | null>(null)
+const mostrarConfirmDialog = ref(false)
 const busqueda = ref('')
-const nivelEliminar = ref<NivelAcademico | null>(null)
-const mostrarDialogEliminar = ref(false)
+const emit = defineEmits(['edit'])
 
-const emit = defineEmits<{
-  (e: 'edit', nivel: NivelAcademico): void
-}>()
-
-const nivelesFiltrados = computed(() => {
-  return niveles.value.filter((n) => n.nombre.toLowerCase().includes(busqueda.value.toLowerCase()))
-})
+const nivelesFiltrados = computed(() =>
+  niveles.value.filter(n =>
+    n.nombre.toLowerCase().includes(busqueda.value.toLowerCase()) ||
+    (n.descripcion?.toLowerCase() ?? '').includes(busqueda.value.toLowerCase())
+  )
+)
 
 async function obtenerLista() {
-  niveles.value = await http.get(ENDPOINT).then((res) => res.data)
+  niveles.value = await http.get(ENDPOINT).then(res => res.data)
 }
 
-function editar(nivel: NivelAcademico) {
+function emitirEdicion(nivel: NivelAcademico) {
   emit('edit', nivel)
 }
 
-function confirmarEliminar(nivel: NivelAcademico) {
-  nivelEliminar.value = nivel
-  mostrarDialogEliminar.value = true
+function mostrarEliminarConfirm(nivel: NivelAcademico) {
+  nivelDelete.value = nivel
+  mostrarConfirmDialog.value = true
 }
 
 async function eliminar() {
-  await http.delete(`${ENDPOINT}/${nivelEliminar.value?.id}`)
-  mostrarDialogEliminar.value = false
+  await http.delete(`${ENDPOINT}/${nivelDelete.value?.id}`)
   obtenerLista()
+  mostrarConfirmDialog.value = false
 }
 
-onMounted(() => obtenerLista())
+onMounted(() => {
+  obtenerLista()
+})
 
 defineExpose({ obtenerLista })
 </script>
 
 <template>
   <div>
-    <div class="col-6 mt-3">
-      <input class="input-search" type="text" v-model="busqueda" placeholder="Buscar nivel académico..." />
+    <div class="col-7 pl-0 mt-3">
+      <InputGroup>
+        <InputGroupAddon><i class="pi pi-search"></i></InputGroupAddon>
+        <InputText v-model="busqueda" type="text" placeholder="Buscar por nombre o descripción" />
+      </InputGroup>
     </div>
 
-    <table class="table-auto border-collapse w-full mt-4">
-      <thead>
-        <tr>
-          <th class="border p-2">#</th>
-          <th class="border p-2">Nombre</th>
-          <th class="border p-2">Descripción</th>
-          <th class="border p-2">Acciones</th>
-        </tr>
-      </thead>
+    <DataTable :value="nivelesFiltrados" paginator :rows="5" :rowsPerPageOptions="[5, 10, 20]"
+      tableStyle="min-width: 50rem">
+      <template #paginatorstart>
+        <Button icon="pi pi-refresh" text @click="obtenerLista" />
+      </template>
 
-      <tbody>
-        <tr v-for="(nivel, index) in nivelesFiltrados" :key="nivel.id" class="hover:bg-gray-100">
-          <td class="border p-2">{{ index + 1 }}</td>
-          <td class="border p-2">{{ nivel.nombre }}</td>
-          <td class="border p-2">{{ nivel.descripcion }}</td>
-          <td class="border p-2">
-            <Button icon="pi pi-pencil" text @click="editar(nivel)" />
-            <Button icon="pi pi-trash" text @click="confirmarEliminar(nivel)" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <Column field="nombre" header="Nombre" sortable style="min-width: 150px" />
+      <Column field="descripcion" header="Descripción" style="min-width: 300px" />
+      <Column header="Acciones" style="min-width: 120px" align-frozen="right">
+        <template #body="{ data }">
+          <Button icon="pi pi-pencil" text @click="emitirEdicion(data)" />
+          <Button icon="pi pi-trash" text @click="mostrarEliminarConfirm(data)" />
+        </template>
+      </Column>
+    </DataTable>
 
-    <Dialog v-model:visible="mostrarDialogEliminar" header="Confirmar Eliminación" :style="{ width: '25rem' }">
-      <p>
-        ¿Eliminar el nivel académico <b>{{ nivelEliminar?.nombre }}</b>?
-      </p>
-
-      <div class="flex justify-end gap-2 mt-4">
-        <Button label="Cancelar" severity="secondary" @click="mostrarDialogEliminar = false" />
-        <Button label="Eliminar" severity="danger" @click="eliminar" />
+    <Dialog v-model:visible="mostrarConfirmDialog" header="Confirmar eliminación" :style="{ width: '25rem' }">
+      <p>¿Seguro que deseas eliminar el nivel académico <strong>{{ nivelDelete?.nombre }}</strong>?</p>
+      <div class="flex justify-end gap-2">
+        <Button label="Cancelar" severity="secondary" @click="mostrarConfirmDialog = false" />
+        <Button label="Eliminar" @click="eliminar" />
       </div>
     </Dialog>
   </div>

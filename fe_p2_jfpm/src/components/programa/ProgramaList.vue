@@ -71,7 +71,6 @@ defineExpose({ obtenerLista })
 
 <template>
   <div>
-    <!-- Buscador -->
     <div class="col-7 pl-0 mt-3 mb-4">
       <InputGroup>
         <InputGroupAddon><i class="pi pi-search"></i></InputGroupAddon>
@@ -79,17 +78,14 @@ defineExpose({ obtenerLista })
       </InputGroup>
     </div>
 
-    <!-- Tabla de Programas -->
     <DataTable :value="programasFiltradas" paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
       tableStyle="min-width: 50rem"
       paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
       currentPageReportTemplate="{first} a {last} de {totalRecords}">
-      <!-- Botón refrescar en paginador -->
       <template #paginatorstart>
         <Button type="button" icon="pi pi-refresh" text @click="obtenerLista" />
       </template>
 
-      <!-- Columnas -->
       <Column field="nombre" header="Nombre" sortable style="min-width: 180px" />
 
       <Column header="Nivel Académico" sortable style="min-width: 160px">
@@ -112,7 +108,6 @@ defineExpose({ obtenerLista })
       </Column>
       <Column field="estado" header="Estado" sortable style="min-width: 140px" />
 
-      <!-- Acciones -->
       <Column header="Acciones" frozen align-frozen="right" style="min-width: 160px;">
         <template #body="{ data }">
           <Button icon="pi pi-pencil" aria-label="Editar" text @click="emitirEdicion(data)" />
@@ -121,7 +116,6 @@ defineExpose({ obtenerLista })
       </Column>
     </DataTable>
 
-    <!-- Dialogo de confirmación de eliminación -->
     <Dialog v-model:visible="mostrarConfirmDialog" header="Confirmar Eliminación" :style="{ width: '25rem' }">
       <p>¿Estás seguro de que deseas eliminar el programa <b>{{ programaDelete?.nombre }}</b>?</p>
       <div class="flex justify-end gap-2">
