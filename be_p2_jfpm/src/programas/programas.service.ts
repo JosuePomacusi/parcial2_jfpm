@@ -3,11 +3,11 @@ import { CreateProgramaDto } from './dto/create-programa.dto';
 import { UpdateProgramaDto } from './dto/update-programa.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Programa } from './entities/programa.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class ProgramasService {
-  constructor(@InjectRepository(Programa) private programasRepository: Repository<Programa>) { }
+  constructor(@InjectRepository(Programa) private programasRepository: Repository<Programa>) {}
 
   async create(createProgramaDto: CreateProgramaDto): Promise<Programa> {
     let programa = await this.programasRepository.findOneBy({
@@ -22,8 +22,14 @@ export class ProgramasService {
     return this.programasRepository.save(programa);
   }
 
-  async findAll(): Promise<Programa[]> {
+  async findAll(parametro?: string): Promise<Programa[]> {
     return this.programasRepository.find({
+      where: [
+        { nombre: ILike(`%${parametro ?? ''}%`) },
+        { nivelAcademico: { nombre: ILike(`%${parametro ?? ''}%`) } },
+        { estado: ILike(`%${parametro ?? ''}%`) },
+        { areaConocimiento: ILike(`%${parametro ?? ''}%`) },
+      ],
       relations: { nivelAcademico: true },
       select: {
         id: true,
@@ -34,9 +40,10 @@ export class ProgramasService {
         costo: true,
         fechaInicio: true,
         estado: true,
+        areaConocimiento: true,
         nivelAcademico: { id: true, nombre: true },
       },
-      order: { id: 'ASC' },
+      order: { nombre: 'ASC' },
     });
   }
 

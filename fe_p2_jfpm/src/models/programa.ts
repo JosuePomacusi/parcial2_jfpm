@@ -10,6 +10,7 @@ export interface Programa {
   fecha_inicio: string
   estado: 'En Planificación' | 'En curso' | 'Finalizado'
   nivelAcademico: NivelAcademico
+  areaConocimiento: 'Derecho' | 'Ingenieria' | 'Economia' | 'Salud'
   fecha_creacion?: string
   fecha_modificacion?: string
   fecha_eliminacion?: string

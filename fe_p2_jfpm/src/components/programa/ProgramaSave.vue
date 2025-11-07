@@ -49,6 +49,7 @@ async function handleSave() {
       costo: programa.value.costo,
       fechaInicio: programa.value.fechaInicio,
       estado: programa.value.estado,
+      areaConocimiento: programa.value.areaConocimiento,
     }
 
     if (props.modoEdicion && programa.value.id) {
@@ -81,9 +82,10 @@ watch(
           descripcion: '',
           version: 1,
           duracionMeses: 0,
-          costo: 0,
+          costo: 0.00,
           fechaInicio: new Date(),
           estado: 'En Planificación',
+          areaConocimiento: 'Salud'
         } as Programa
         idNivelAcademico.value = null
       }
@@ -96,7 +98,7 @@ watch(
   <div class="card flex justify-center">
     <Dialog v-model:visible="dialogVisible" :header="props.modoEdicion ? 'Editar Programa' : 'Crear Programa'"
       style="width: 35rem" modal>
-      <!-- Nivel académico -->
+
       <div class="flex items-center gap-4 mb-4">
         <label for="nivel" class="font-semibold w-4">Nivel académico</label>
         <Select id="nivel" v-model="idNivelAcademico" :options="niveles" optionLabel="nombre" optionValue="id"
@@ -139,6 +141,12 @@ watch(
       <div class="flex items-center gap-4 mb-4">
         <label for="estado" class="font-semibold w-4">Estado</label>
         <Select id="estado" v-model="programa.estado" :options="['En Planificación', 'En curso', 'Finalizado']"
+          class="flex-auto" placeholder="Seleccione estado" />
+      </div>
+
+      <div class="flex items-center gap-4 mb-4">
+        <label for="estado" class="font-semibold w-4">Area de Conocimiento</label>
+        <Select id="estado" v-model="programa.areaConocimiento" :options="['Derecho', 'Ingenieria', 'Economia', 'Salud']"
           class="flex-auto" placeholder="Seleccione estado" />
       </div>
 

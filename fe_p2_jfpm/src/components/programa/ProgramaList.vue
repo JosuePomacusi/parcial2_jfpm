@@ -12,7 +12,6 @@ const mostrarConfirmDialog = ref<boolean>(false)
 const busqueda = ref('')
 const emit = defineEmits(['edit'])
 
-// Computed para filtrar por nombre o por nombre del nivel académico (defensivo)
 const programasFiltradas = computed(() => {
   const q = busqueda.value.trim().toLowerCase()
   if (!q) return programas.value
@@ -107,6 +106,7 @@ defineExpose({ obtenerLista })
         </template>
       </Column>
       <Column field="estado" header="Estado" sortable style="min-width: 140px" />
+      <Column field="areaConocimiento" header="AreaConocimiento" sortable style="min-width: 140px" />
 
       <Column header="Acciones" frozen align-frozen="right" style="min-width: 160px;">
         <template #body="{ data }">

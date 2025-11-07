@@ -36,6 +36,11 @@ export class CreateProgramaDto {
 
     @ApiProperty()
     @IsString({ message: 'El campo estado debe ser de tipo cadena' })
-    @MaxLength(20)
+    @MaxLength(20, { message: 'El campo estado no debe exceder los 20 caracteres' })
     estado: string;
+
+    @ApiProperty()
+    @IsString({ message: 'El campo estado debe ser de tipo cadena' })
+    @MaxLength(20, { message: 'El campo estado no debe exceder los 20 caracteres' })
+    areaConocimiento: string;
 }
